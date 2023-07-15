@@ -13,14 +13,19 @@ eval "$('/c/ProgramData/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
 # ENV
 eval conda activate dev
 
-# SOURCE ALIASES
-if [ -f ~/.bash_aliases ]; then
-    source ~/.bash_aliases
-fi
-
 # FUNCTION - del remote branch del_branch(branchA)
 del_branch() {
     # git push -u origin Branchname
     git push origin --delete $1
     git branch -D $1
 }
+
+# ALIASES
+alias dir2="cd '//server/dir1/dir2/'"
+alias tk="cd '/c/Users/RobertsA/projects/toolkit'"
+alias test_env="conda activate /c/Users/RobertsA/.envs/test;cd '/c/Users/RobertsA/projects/toolkit'"
+
+# SOURCE ALIASES
+if [ -f ~/.bash_aliases ]; then
+    source ~/.bash_aliases
+fi
