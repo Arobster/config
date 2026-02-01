@@ -1,0 +1,44 @@
+## ALIASES ##
+alias grep='grep --color=auto'
+alias docs='cd ~/Documents'
+
+## FUNCTIONS ##
+# FUNCTION - git push * master
+gitpushall() {
+    if [ -z "$1" ]; then
+        echo "Error: branch name is required"
+        echo "Usage: gitpushall master|dev"
+        return 1
+    fi
+
+    echo "Pushing branch $1 to all remotes..."
+    git push docs "$1" && echo "✓ Pushed to docs"
+    git push sandbox "$1" && echo "✓ Pushed to sandbox"
+	git push gitmil "$1" && echo "✓ Pushed to gitmil"
+	#git push origin --delete $1
+    #git branch -D $1
+
+    echo "Done!"
+}
+
+gitpushalltag() {
+    if [ -z "$1" ]; then
+        echo "Error: Tag name is required"
+        echo "Usage: gitpushallver <tag>"
+        return 1
+    fi
+    
+    # Check if argument is a valid tag
+    if ! git tag -l | grep -q "^$1$"; then
+        echo "Warning: Tag '$1' does not exist"
+        echo "Available tags:"
+        git tag -l
+        return 1
+    fi
+    
+    echo "Pushing tag $1 to all remotes..."
+    git push docs "$1" && echo "✓ Pushed to docs"
+    git push sandbox "$1" && echo "✓ Pushed to sandbox"
+    git push gitmil "$1" && echo "✓ Pushed to gitmil"
+    echo "Done!"
+}
