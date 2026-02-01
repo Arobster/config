@@ -1,0 +1,133 @@
+# .bashrc
+
+## PROMPT ##
+# --- Custom colorful prompt with venv + git + 2-level path ---
+
+# Function to get the current git branch with status
+parse_git_branch() {
+  git rev-parse --is-inside-work-tree &>/dev/null || return
+
+  branch=$(git branch 2>/dev/null | sed -n '/\* /s///p')
+  [[ -n $branch ]] || return
+
+  status=$(git status --porcelain 2>/dev/null)
+
+  [[ -n "$(echo "$status" | grep '^M')" ]] && dirty="*" || dirty=""
+  [[ -n "$(echo "$status" | grep '^ M')" ]] && modified="*" || modified=""
+  [[ -n "$(echo "$status" | grep '^A')" ]] && staged="+" || staged=""
+  [[ -n "$(echo "$status" | grep '^??')" ]] && untracked="!" || untracked=""
+
+  echo "(${branch}${staged}${modified}${untracked})"
+}
+
+two_level_pwd() {
+    local dir="$PWD"
+    local home="$HOME"
+
+    # --- Case 1: inside $HOME ---
+    if [[ "$dir" == "$home" ]]; then
+        echo "~"
+        return
+    elif [[ "$dir" == "$home/"* ]]; then
+        local rel="${dir#$home/}"        # remove /home/user_name/
+        local IFS='/'
+        read -ra parts <<< "$rel"
+        local count=${#parts[@]}
+
+        if (( count == 1 )); then
+            echo "~/${parts[0]}"
+        elif (( count == 2 )); then
+            echo "~/${parts[0]}/${parts[1]}"
+        else
+            local parent=${parts[count-2]}
+            local current=${parts[count-1]}
+            echo "~/../${parent}/${current}"
+        fi
+        return
+    fi
+
+    # --- Case 2: outside $HOME ---
+    local IFS='/'
+    read -ra parts <<< "$dir"
+    local count=${#parts[@]}
+
+    # If shallow path (root + 1 or 2 dirs), just print full path
+    if (( count <= 3 )); then
+        # count includes empty first element for leading /
+        echo "$dir"
+        return
+    fi
+
+    # Otherwise, deeper system paths: /../parent/current
+    local parent=${parts[count-2]}
+    local current=${parts[count-1]}
+    echo "/../${parent}/${current}"
+}
+
+# Prompt Colors
+RED="\[\033[01;31m\]"
+GREEN="\[\033[01;32m\]"
+YELLOW="\[\033[01;33m\]"
+BLUE="\[\033[01;34m\]"
+RESET="\[\033[0m\]"
+
+# Prompt Build Segments
+VENV_PART="\$(if [[ -n \"\$VIRTUAL_ENV\" ]]; then echo \"${YELLOW}(\${VIRTUAL_ENV##*/})${RESET} \"; fi)"
+DIR_PART="${BLUE}\u@\h:\$(two_level_pwd)${RESET}"
+GIT_PART="${GREEN}\$(parse_git_branch)${RESET}"
+
+# Prompt Combine parts into PS1
+export PS1="${VENV_PART}${DIR_PART} ${GIT_PART}\n\$ "
+
+
+## VIM ##
+set -o vi
+bind '"kj":vi-movement-mode'
+export EDITOR="vim"
+
+## SOURCE ALIASES AND FUNCTIONS ##
+if [ -f ~/.bash_aliases ]; then
+    source ~/.bash_aliases
+fi
+
+## CONDA ##
+#export CONDA_AUTO_ACTIVATE_BASE=false
+#if [ -f /c/Anaconda3/Scripts/conda.exe ]; then
+#	eval "$('/c/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+#else
+#	eval "$('/c/ProgramData/Anaconda3/Scripts/conda.exe' 'shell.bash' 'hook')"
+#fi
+#. /c/ProgramData/Anaconda3/etc/profile.d/conda.sh
+
+## ENV ##
+#eval conda activate //nlanfs/fldredir/RobertsA/envs/conda_dev_py3122
+
+
+## Set by redhat automatically ##
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
+then
+    PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+fi
+export PATH
+
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
+# User specific aliases and functions
+if [ -d ~/.bashrc.d ]; then
+	for rc in ~/.bashrc.d/*; do
+		if [ -f "$rc" ]; then
+			. "$rc"
+		fi
+	done
+fi
+
+unset rc
+
