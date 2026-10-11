@@ -1,0 +1,3 @@
+# Keep config files portable across Windows, Linux, WSL, and Raspberry Pi.
+# Binary files are automatically left alone; detected text files use LF.
+* text=auto eol=lf
